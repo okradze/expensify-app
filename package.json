@@ -16,6 +16,7 @@
     "enzyme-to-json": "^3.3.5",
     "jest": "^24.3.1",
     "live-server": "^1.2.1",
+    "mini-css-extract-plugin": "^0.5.0",
     "moment": "^2.24.0",
     "node-sass": "^4.11.0",
     "normalize.css": "^8.0.1",
@@ -36,8 +37,9 @@
     "webpack-dev-server": "^3.2.1"
   },
   "scripts": {
+    "serve": "live-server public",
     "dev-server": "webpack-dev-server",
-    "build": "webpack",
+    "build": "webpack -p --env production",
     "test": "jest components/ExpenseListFilters --config=jest.config.json"
   }
 }
