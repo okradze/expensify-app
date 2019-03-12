@@ -8,18 +8,9 @@
     "@babel/preset-env": "^7.3.4",
     "@babel/preset-react": "^7.0.0",
     "babel-cli": "^6.26.0",
-    "babel-loader": "^8.0.5",
     "babel-plugin-transform-class-properties": "^6.24.1",
-    "css-loader": "^2.1.0",
-    "enzyme": "^3.9.0",
-    "enzyme-adapter-react-16": "^1.10.0",
-    "enzyme-to-json": "^3.3.5",
     "express": "^4.16.4",
-    "jest": "^24.3.1",
-    "live-server": "^1.2.1",
-    "mini-css-extract-plugin": "^0.5.0",
     "moment": "^2.24.0",
-    "node-sass": "^4.11.0",
     "normalize.css": "^8.0.1",
     "raf": "^3.4.1",
     "react": "^16.8.3",
@@ -31,15 +22,16 @@
     "react-router-dom": "^4.3.1",
     "react-test-renderer": "^16.8.4",
     "redux": "^4.0.1",
-    "sass": "^1.17.2",
-    "sass-loader": "^7.1.0",
-    "style-loader": "^0.23.1",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.2.3",
-    "webpack-dev-server": "^3.2.1"
+    "sass": "^1.17.2"
+  },
+  "devDependencies": {
+    "enzyme": "^3.9.0",
+    "enzyme-adapter-react-16": "^1.10.0",
+    "enzyme-to-json": "^3.3.5",
+    "jest": "^24.3.1",
+    "live-server": "^1.2.1"
   },
   "scripts": {
-    "serve": "live-server public",
     "dev-server": "parcel src/index.html",
     "build": "parcel src/index.html --out-dir prod",
     "test": "jest components/ExpenseListFilters --config=jest.config.json"
