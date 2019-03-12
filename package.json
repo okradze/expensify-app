@@ -35,6 +35,6 @@
   "scripts": {
     "dev-server": "parcel src/index.html",
     "build": "parcel src/index.html --out-dir prod",
-    "test": "jest components/ExpenseListItem --config=jest.config.json"
+    "test": "jest components/ExpensesSummary --config=jest.config.json"
   }
 }

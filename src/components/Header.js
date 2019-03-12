@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import getExpensesTotal from '../selectors/expenses-total';
 
 const Header = () => (
     <header>

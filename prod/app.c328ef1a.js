@@ -32504,7 +32504,24 @@ var _matchPath2 = _interopRequireDefault(require("./matchPath"));
 var _withRouter2 = _interopRequireDefault(require("./withRouter"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-},{"./BrowserRouter":"../node_modules/react-router-dom/es/BrowserRouter.js","./HashRouter":"../node_modules/react-router-dom/es/HashRouter.js","./Link":"../node_modules/react-router-dom/es/Link.js","./MemoryRouter":"../node_modules/react-router-dom/es/MemoryRouter.js","./NavLink":"../node_modules/react-router-dom/es/NavLink.js","./Prompt":"../node_modules/react-router-dom/es/Prompt.js","./Redirect":"../node_modules/react-router-dom/es/Redirect.js","./Route":"../node_modules/react-router-dom/es/Route.js","./Router":"../node_modules/react-router-dom/es/Router.js","./StaticRouter":"../node_modules/react-router-dom/es/StaticRouter.js","./Switch":"../node_modules/react-router-dom/es/Switch.js","./generatePath":"../node_modules/react-router-dom/es/generatePath.js","./matchPath":"../node_modules/react-router-dom/es/matchPath.js","./withRouter":"../node_modules/react-router-dom/es/withRouter.js"}],"components/Header.js":[function(require,module,exports) {
+},{"./BrowserRouter":"../node_modules/react-router-dom/es/BrowserRouter.js","./HashRouter":"../node_modules/react-router-dom/es/HashRouter.js","./Link":"../node_modules/react-router-dom/es/Link.js","./MemoryRouter":"../node_modules/react-router-dom/es/MemoryRouter.js","./NavLink":"../node_modules/react-router-dom/es/NavLink.js","./Prompt":"../node_modules/react-router-dom/es/Prompt.js","./Redirect":"../node_modules/react-router-dom/es/Redirect.js","./Route":"../node_modules/react-router-dom/es/Route.js","./Router":"../node_modules/react-router-dom/es/Router.js","./StaticRouter":"../node_modules/react-router-dom/es/StaticRouter.js","./Switch":"../node_modules/react-router-dom/es/Switch.js","./generatePath":"../node_modules/react-router-dom/es/generatePath.js","./matchPath":"../node_modules/react-router-dom/es/matchPath.js","./withRouter":"../node_modules/react-router-dom/es/withRouter.js"}],"selectors/expenses-total.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _default = function _default(expenses) {
+  return expenses.map(function (expense) {
+    return expense.amount;
+  }).reduce(function (sum, value) {
+    return sum + value;
+  }, 0);
+};
+
+exports.default = _default;
+},{}],"components/Header.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -32515,6 +32532,8 @@ exports.default = void 0;
 var _react = _interopRequireDefault(require("react"));
 
 var _reactRouterDom = require("react-router-dom");
+
+var _expensesTotal = _interopRequireDefault(require("../selectors/expenses-total"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -32531,7 +32550,7 @@ var Header = function Header() {
 
 var _default = Header;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","react-router-dom":"../node_modules/react-router-dom/es/index.js"}],"../node_modules/moment/moment.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","react-router-dom":"../node_modules/react-router-dom/es/index.js","../selectors/expenses-total":"selectors/expenses-total.js"}],"../node_modules/moment/moment.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 //! moment.js
@@ -38154,34 +38173,7 @@ var global = arguments[3];
 return numeral;
 }));
 
-},{}],"locales/ge.js":[function(require,module,exports) {
-"use strict";
-
-var _numeral = _interopRequireDefault(require("numeral"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-_numeral.default.register('locale', 'ge', {
-  delimiters: {
-    thousands: ' ',
-    decimal: ','
-  },
-  abbreviations: {
-    thousand: 'k',
-    million: 'm',
-    billion: 'b',
-    trillion: 't'
-  },
-  ordinal: function ordinal(number) {
-    return number === 1 ? 'er' : 'ème';
-  },
-  currency: {
-    symbol: '₾'
-  }
-});
-
-_numeral.default.locale('ge');
-},{"numeral":"../node_modules/numeral/numeral.js"}],"components/ExpenseListItem.js":[function(require,module,exports) {
+},{}],"components/ExpenseListItem.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -38196,8 +38188,6 @@ var _reactRouterDom = require("react-router-dom");
 var _moment = _interopRequireDefault(require("moment"));
 
 var _numeral = _interopRequireDefault(require("numeral"));
-
-require("../locales/ge");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -38214,7 +38204,7 @@ var ExpenseListItem = function ExpenseListItem(_ref) {
 
 var _default = ExpenseListItem;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","react-router-dom":"../node_modules/react-router-dom/es/index.js","moment":"../node_modules/moment/moment.js","numeral":"../node_modules/numeral/numeral.js","../locales/ge":"locales/ge.js"}],"selectors/expenses.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","react-router-dom":"../node_modules/react-router-dom/es/index.js","moment":"../node_modules/moment/moment.js","numeral":"../node_modules/numeral/numeral.js"}],"selectors/expenses.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -61048,15 +61038,11 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
     sortByDate: function sortByDate() {
       return dispatch((0, _filters.sortByDate)());
     },
-    setStartDate: function setStartDate() {
-      return function (startDate) {
-        return dispatch((0, _filters.setStartDate)(startDate));
-      };
+    setStartDate: function setStartDate(startDate) {
+      return dispatch((0, _filters.setStartDate)(startDate));
     },
-    setEndDate: function setEndDate() {
-      return function (endDate) {
-        return dispatch((0, _filters.setEndDate)(endDate));
-      };
+    setEndDate: function setEndDate(endDate) {
+      return dispatch((0, _filters.setEndDate)(endDate));
     }
   };
 };
@@ -61064,7 +61050,46 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
 var _default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(ExpenseListFilters);
 
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","react-redux":"../node_modules/react-redux/es/index.js","../actions/filters":"actions/filters.js","react-dates":"../node_modules/react-dates/index.js","uuid":"../node_modules/uuid/index.js"}],"components/ExpenseDashboardPage.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","react-redux":"../node_modules/react-redux/es/index.js","../actions/filters":"actions/filters.js","react-dates":"../node_modules/react-dates/index.js","uuid":"../node_modules/uuid/index.js"}],"components/ExpensesSummary.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = exports.ExpensesSummary = void 0;
+
+var _react = _interopRequireDefault(require("react"));
+
+var _reactRedux = require("react-redux");
+
+var _numeral = _interopRequireDefault(require("numeral"));
+
+var _expenses = _interopRequireDefault(require("../selectors/expenses"));
+
+var _expensesTotal = _interopRequireDefault(require("../selectors/expenses-total"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ExpensesSummary = function ExpensesSummary(_ref) {
+  var count = _ref.count,
+      total = _ref.total;
+  return _react.default.createElement("div", null, _react.default.createElement("p", null, "Viewing ", count, " ", count > 1 ? 'expenses' : 'expense', " totaling ", (0, _numeral.default)(total / 100).format('$0,0.00')));
+};
+
+exports.ExpensesSummary = ExpensesSummary;
+
+var mapStateToProps = function mapStateToProps(state) {
+  var visibleExpenses = (0, _expenses.default)(state.expenses, state.filters);
+  return {
+    count: visibleExpenses.length,
+    total: (0, _expensesTotal.default)(visibleExpenses)
+  };
+};
+
+var _default = (0, _reactRedux.connect)(mapStateToProps)(ExpensesSummary);
+
+exports.default = _default;
+},{"react":"../node_modules/react/index.js","react-redux":"../node_modules/react-redux/es/index.js","numeral":"../node_modules/numeral/numeral.js","../selectors/expenses":"selectors/expenses.js","../selectors/expenses-total":"selectors/expenses-total.js"}],"components/ExpenseDashboardPage.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -61078,15 +61103,17 @@ var _ExpenseList = _interopRequireDefault(require("./ExpenseList"));
 
 var _ExpenseListFilters = _interopRequireDefault(require("./ExpenseListFilters"));
 
+var _ExpensesSummary = _interopRequireDefault(require("./ExpensesSummary"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var ExpenseDashboardPage = function ExpenseDashboardPage() {
-  return _react.default.createElement("div", null, _react.default.createElement(_ExpenseListFilters.default, null), _react.default.createElement(_ExpenseList.default, null));
+  return _react.default.createElement("div", null, _react.default.createElement(_ExpensesSummary.default, null), _react.default.createElement(_ExpenseListFilters.default, null), _react.default.createElement(_ExpenseList.default, null));
 };
 
 var _default = ExpenseDashboardPage;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","./ExpenseList":"components/ExpenseList.js","./ExpenseListFilters":"components/ExpenseListFilters.js"}],"../node_modules/es-abstract/helpers/forEach.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","./ExpenseList":"components/ExpenseList.js","./ExpenseListFilters":"components/ExpenseListFilters.js","./ExpensesSummary":"components/ExpensesSummary.js"}],"../node_modules/es-abstract/helpers/forEach.js":[function(require,module,exports) {
 'use strict';
 
 module.exports = function forEach(array, callback) {
@@ -62275,7 +62302,34 @@ module.hot.accept(reloadCSS);
         module.hot.dispose(reloadCSS);
         module.hot.accept(reloadCSS);
       
-},{"_css_loader":"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/css-loader.js"}],"app.js":[function(require,module,exports) {
+},{"_css_loader":"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/css-loader.js"}],"locales/ge.js":[function(require,module,exports) {
+"use strict";
+
+var _numeral = _interopRequireDefault(require("numeral"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+_numeral.default.register('locale', 'ge', {
+  delimiters: {
+    thousands: ' ',
+    decimal: ','
+  },
+  abbreviations: {
+    thousand: 'k',
+    million: 'm',
+    billion: 'b',
+    trillion: 't'
+  },
+  ordinal: function ordinal(number) {
+    return number === 1 ? 'er' : 'ème';
+  },
+  currency: {
+    symbol: '₾'
+  }
+});
+
+_numeral.default.locale('ge');
+},{"numeral":"../node_modules/numeral/numeral.js"}],"app.js":[function(require,module,exports) {
 "use strict";
 
 var _react = _interopRequireDefault(require("react"));
@@ -62294,6 +62348,8 @@ require("./styles/main.scss");
 
 require("react-dates/lib/css/_datepicker.css");
 
+require("./locales/ge");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var store = (0, _configureStore.default)();
@@ -62303,7 +62359,7 @@ var jsx = _react.default.createElement(_reactRedux.Provider, {
 }, _react.default.createElement(_AppRouter.default, null));
 
 _reactDom.default.render(jsx, document.getElementById('app'));
-},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","react-redux":"../node_modules/react-redux/es/index.js","./routes/AppRouter":"routes/AppRouter.js","./store/configureStore":"store/configureStore.js","normalize.css/normalize.css":"../node_modules/normalize.css/normalize.css","./styles/main.scss":"styles/main.scss","react-dates/lib/css/_datepicker.css":"../node_modules/react-dates/lib/css/_datepicker.css"}],"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","react-redux":"../node_modules/react-redux/es/index.js","./routes/AppRouter":"routes/AppRouter.js","./store/configureStore":"store/configureStore.js","normalize.css/normalize.css":"../node_modules/normalize.css/normalize.css","./styles/main.scss":"styles/main.scss","react-dates/lib/css/_datepicker.css":"../node_modules/react-dates/lib/css/_datepicker.css","./locales/ge":"locales/ge.js"}],"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -62331,7 +62387,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50308" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50986" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
