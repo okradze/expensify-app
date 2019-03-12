@@ -12,6 +12,7 @@
     "express": "^4.16.4",
     "moment": "^2.24.0",
     "normalize.css": "^8.0.1",
+    "numeral": "^2.0.6",
     "raf": "^3.4.1",
     "react": "^16.8.3",
     "react-addons-shallow-compare": "^15.6.2",
@@ -34,6 +35,6 @@
   "scripts": {
     "dev-server": "parcel src/index.html",
     "build": "parcel src/index.html --out-dir prod",
-    "test": "jest components/ExpenseListFilters --config=jest.config.json"
+    "test": "jest components/ExpenseListItem --config=jest.config.json"
   }
 }
