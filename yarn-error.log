@@ -1,0 +1,68 @@
+Arguments: 
+  C:\Program Files\nodejs\node.exe C:\Users\Psycho\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js install
+
+PATH: 
+  C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Users\Psycho\bin;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Program Files (x86)\Intel\OpenCL SDK\2.0\bin\x86;C:\Program Files (x86)\Intel\OpenCL SDK\2.0\bin\x64;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\nodejs;C:\Program Files\Git\cmd;C:\Users\Psycho\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Psycho\AppData\Roaming\npm
+
+Yarn version: 
+  1.13.0
+
+Node version: 
+  11.10.1
+
+Platform: 
+  win32 x64
+
+Trace: 
+  Error: EPERM: operation not permitted, scandir 'C:\Users\Psycho\Desktop\react\expensify-app\node_modules\@types'
+
+npm manifest: 
+  {
+    "name": "indecision-app",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "dependencies": {
+      "express": "^4.16.4",
+      "moment": "^2.24.0",
+      "normalize.css": "^8.0.1",
+      "numeral": "^2.0.6",
+      "raf": "^3.4.1",
+      "react": "^16.8.3",
+      "react-addons-shallow-compare": "^15.6.2",
+      "react-dates": "^20.0.0",
+      "react-dom": "^16.8.3",
+      "react-modal": "^3.8.1",
+      "react-redux": "^6.0.1",
+      "react-router-dom": "^4.3.1",
+      "redux": "^4.0.1"
+    },
+    "devDependencies": {
+      "@babel/core": "^7.3.4",
+      "@babel/preset-env": "^7.3.4",
+      "@babel/preset-react": "^7.0.0",
+      "babel-cli": "^6.26.0",
+      "babel-plugin-transform-class-properties": "^6.24.1",
+      "enzyme": "^3.9.0",
+      "enzyme-adapter-react-16": "^1.10.0",
+      "enzyme-to-json": "^3.3.5",
+      "jest": "^24.3.1",
+      "live-server": "^1.2.1",
+      "parcel-bundler": "^1.12.0",
+      "react-test-renderer": "^16.8.4",
+      "sass": "^1.17.2"
+    },
+    "scripts": {
+      "dev-server": "parcel src/index.html",
+      "build": "parcel src/index.html --out-dir prod",
+      "test": "jest components/ExpensesSummary --config=jest.config.json"
+    },
+    "repository": "git@github.com:oqradzemirian/expensify-app.git",
+    "author": "Mirian Okradze <okradzemirian@gmail.com>"
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

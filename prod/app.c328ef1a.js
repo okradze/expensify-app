@@ -324,7 +324,7 @@ checkPropTypes.resetWarningCache = function () {
 
 module.exports = checkPropTypes;
 },{"./lib/ReactPropTypesSecret":"../node_modules/prop-types/lib/ReactPropTypesSecret.js"}],"../node_modules/react/cjs/react.development.js":[function(require,module,exports) {
-/** @license React v16.8.3
+/** @license React v16.8.4
  * react.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -343,7 +343,7 @@ if ("development" !== "production") {
     var checkPropTypes = require('prop-types/checkPropTypes'); // TODO: this is special because it gets imported during build.
 
 
-    var ReactVersion = '16.8.3'; // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
+    var ReactVersion = '16.8.4'; // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
     // nor polyfill, then a plain number is used for performance.
 
     var hasSymbol = typeof Symbol === 'function' && Symbol.for;
@@ -2255,7 +2255,7 @@ if ("development" === 'production') {
 }
 },{"./cjs/react.development.js":"../node_modules/react/cjs/react.development.js"}],"../node_modules/scheduler/cjs/scheduler.development.js":[function(require,module,exports) {
 var global = arguments[3];
-/** @license React v0.13.3
+/** @license React v0.13.4
  * scheduler.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -2975,7 +2975,7 @@ if ("development" === 'production') {
   module.exports = require('./cjs/scheduler.development.js');
 }
 },{"./cjs/scheduler.development.js":"../node_modules/scheduler/cjs/scheduler.development.js"}],"../node_modules/scheduler/cjs/scheduler-tracing.development.js":[function(require,module,exports) {
-/** @license React v0.13.3
+/** @license React v0.13.4
  * scheduler-tracing.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -3371,7 +3371,7 @@ if ("development" === 'production') {
   module.exports = require('./cjs/scheduler-tracing.development.js');
 }
 },{"./cjs/scheduler-tracing.development.js":"../node_modules/scheduler/cjs/scheduler-tracing.development.js"}],"../node_modules/react-dom/cjs/react-dom.development.js":[function(require,module,exports) {
-/** @license React v16.8.3
+/** @license React v16.8.4
  * react-dom.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -13796,6 +13796,7 @@ if ("development" !== "production") {
         this._debugSource = null;
         this._debugOwner = null;
         this._debugIsCurrentlyTiming = false;
+        this._debugHookTypes = null;
 
         if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
           Object.preventExtensions(this);
@@ -13867,6 +13868,7 @@ if ("development" !== "production") {
           workInProgress._debugID = current._debugID;
           workInProgress._debugSource = current._debugSource;
           workInProgress._debugOwner = current._debugOwner;
+          workInProgress._debugHookTypes = current._debugHookTypes;
         }
         workInProgress.alternate = current;
         current.alternate = workInProgress;
@@ -14136,6 +14138,7 @@ if ("development" !== "production") {
       target._debugSource = source._debugSource;
       target._debugOwner = source._debugOwner;
       target._debugIsCurrentlyTiming = source._debugIsCurrentlyTiming;
+      target._debugHookTypes = source._debugHookTypes;
       return target;
     } // TODO: This should be lifted into the renderer.
     // The following attributes are only used by interaction tracing builds.
@@ -16616,7 +16619,6 @@ if ("development" !== "production") {
     // work-in-progress hook list is a new list that will be added to the
     // work-in-progress fiber.
 
-    var firstCurrentHook = null;
     var currentHook = null;
     var nextCurrentHook = null;
     var firstWorkInProgressHook = null;
@@ -16640,38 +16642,66 @@ if ("development" !== "production") {
     var numberOfReRenders = 0;
     var RE_RENDER_LIMIT = 25; // In DEV, this is the name of the currently executing primitive hook
 
-    var currentHookNameInDev = null;
+    var currentHookNameInDev = null; // In DEV, this list ensures that hooks are called in the same order between renders.
+    // The list stores the order of hooks used during the initial render (mount).
+    // Subsequent renders (updates) reference this list.
 
-    function warnOnHookMismatchInDev() {
+    var hookTypesDev = null;
+    var hookTypesUpdateIndexDev = -1;
+
+    function mountHookTypesDev() {
+      {
+        var hookName = currentHookNameInDev;
+
+        if (hookTypesDev === null) {
+          hookTypesDev = [hookName];
+        } else {
+          hookTypesDev.push(hookName);
+        }
+      }
+    }
+
+    function updateHookTypesDev() {
+      {
+        var hookName = currentHookNameInDev;
+
+        if (hookTypesDev !== null) {
+          hookTypesUpdateIndexDev++;
+
+          if (hookTypesDev[hookTypesUpdateIndexDev] !== hookName) {
+            warnOnHookMismatchInDev(hookName);
+          }
+        }
+      }
+    }
+
+    function warnOnHookMismatchInDev(currentHookName) {
       {
         var componentName = getComponentName(currentlyRenderingFiber$1.type);
 
         if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
           didWarnAboutMismatchedHooksForComponent.add(componentName);
-          var secondColumnStart = 22;
-          var table = '';
-          var prevHook = firstCurrentHook;
-          var nextHook = firstWorkInProgressHook;
-          var n = 1;
 
-          while (prevHook !== null && nextHook !== null) {
-            var oldHookName = prevHook._debugType;
-            var newHookName = nextHook._debugType;
-            var row = n + '. ' + oldHookName; // Extra space so second column lines up
-            // lol @ IE not supporting String#repeat
+          if (hookTypesDev !== null) {
+            var table = '';
+            var secondColumnStart = 30;
 
-            while (row.length < secondColumnStart) {
-              row += ' ';
+            for (var i = 0; i <= hookTypesUpdateIndexDev; i++) {
+              var oldHookName = hookTypesDev[i];
+              var newHookName = i === hookTypesUpdateIndexDev ? currentHookName : oldHookName;
+              var row = i + 1 + '. ' + oldHookName; // Extra space so second column lines up
+              // lol @ IE not supporting String#repeat
+
+              while (row.length < secondColumnStart) {
+                row += ' ';
+              }
+
+              row += newHookName + '\n';
+              table += row;
             }
 
-            row += newHookName + '\n';
-            table += row;
-            prevHook = prevHook.next;
-            nextHook = nextHook.next;
-            n++;
+            warning$1(false, 'React has detected a change in the order of Hooks called by %s. ' + 'This will lead to bugs and errors if not fixed. ' + 'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' + '   Previous render            Next render\n' + '   ------------------------------------------------------\n' + '%s' + '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n', componentName, table);
           }
-
-          warning$1(false, 'React has detected a change in the order of Hooks called by %s. ' + 'This will lead to bugs and errors if not fixed. ' + 'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' + '   Previous render    Next render\n' + '   -------------------------------\n' + '%s' + '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n', componentName, table);
         }
       }
     }
@@ -16710,7 +16740,11 @@ if ("development" !== "production") {
     function renderWithHooks(current, workInProgress, Component, props, refOrContext, nextRenderExpirationTime) {
       renderExpirationTime = nextRenderExpirationTime;
       currentlyRenderingFiber$1 = workInProgress;
-      firstCurrentHook = nextCurrentHook = current !== null ? current.memoizedState : null; // The following should have already been reset
+      nextCurrentHook = current !== null ? current.memoizedState : null;
+      {
+        hookTypesDev = current !== null ? current._debugHookTypes : null;
+        hookTypesUpdateIndexDev = -1;
+      } // The following should have already been reset
       // currentHook = null;
       // workInProgressHook = null;
       // remainingExpirationTime = NoWork;
@@ -16719,9 +16753,26 @@ if ("development" !== "production") {
       // renderPhaseUpdates = null;
       // numberOfReRenders = 0;
       // sideEffectTag = 0;
+      // TODO Warn if no hooks are used at all during mount, then some are used during update.
+      // Currently we will identify the update render as a mount because nextCurrentHook === null.
+      // This is tricky because it's valid for certain types of components (e.g. React.lazy)
+      // Using nextCurrentHook to differentiate between mount/update only works if at least one stateful hook is used.
+      // Non-stateful hooks (e.g. context) don't get added to memoizedState,
+      // so nextCurrentHook would be null during updates and mounts.
 
       {
-        ReactCurrentDispatcher$1.current = nextCurrentHook === null ? HooksDispatcherOnMountInDEV : HooksDispatcherOnUpdateInDEV;
+        if (nextCurrentHook !== null) {
+          ReactCurrentDispatcher$1.current = HooksDispatcherOnUpdateInDEV;
+        } else if (hookTypesDev !== null) {
+          // This dispatcher handles an edge case where a component is updating,
+          // but no stateful hooks have been used.
+          // We want to match the production code behavior (which will use HooksDispatcherOnMount),
+          // but with the extra DEV validation to ensure hooks ordering hasn't changed.
+          // This dispatcher does that.
+          ReactCurrentDispatcher$1.current = HooksDispatcherOnMountWithHookTypesInDEV;
+        } else {
+          ReactCurrentDispatcher$1.current = HooksDispatcherOnMountInDEV;
+        }
       }
       var children = Component(props, refOrContext);
 
@@ -16730,23 +16781,24 @@ if ("development" !== "production") {
           didScheduleRenderPhaseUpdate = false;
           numberOfReRenders += 1; // Start over from the beginning of the list
 
-          firstCurrentHook = nextCurrentHook = current !== null ? current.memoizedState : null;
+          nextCurrentHook = current !== null ? current.memoizedState : null;
           nextWorkInProgressHook = firstWorkInProgressHook;
           currentHook = null;
           workInProgressHook = null;
           componentUpdateQueue = null;
+          {
+            // Also validate hook order for cascading updates.
+            hookTypesUpdateIndexDev = -1;
+          }
           ReactCurrentDispatcher$1.current = HooksDispatcherOnUpdateInDEV;
           children = Component(props, refOrContext);
         } while (didScheduleRenderPhaseUpdate);
 
         renderPhaseUpdates = null;
         numberOfReRenders = 0;
-      }
-
-      {
-        currentHookNameInDev = null;
       } // We can assume the previous dispatcher is always this one, since we set it
       // at the beginning of the render phase and there's no re-entrancy.
+
 
       ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
       var renderedWork = currentlyRenderingFiber$1;
@@ -16754,15 +16806,24 @@ if ("development" !== "production") {
       renderedWork.expirationTime = remainingExpirationTime;
       renderedWork.updateQueue = componentUpdateQueue;
       renderedWork.effectTag |= sideEffectTag;
+      {
+        renderedWork._debugHookTypes = hookTypesDev;
+      } // This check uses currentHook so that it works the same in DEV and prod bundles.
+      // hookTypesDev could catch more cases (e.g. context) but only in DEV bundles.
+
       var didRenderTooFewHooks = currentHook !== null && currentHook.next !== null;
       renderExpirationTime = NoWork;
       currentlyRenderingFiber$1 = null;
-      firstCurrentHook = null;
       currentHook = null;
       nextCurrentHook = null;
       firstWorkInProgressHook = null;
       workInProgressHook = null;
       nextWorkInProgressHook = null;
+      {
+        currentHookNameInDev = null;
+        hookTypesDev = null;
+        hookTypesUpdateIndexDev = -1;
+      }
       remainingExpirationTime = NoWork;
       componentUpdateQueue = null;
       sideEffectTag = 0; // These were reset above
@@ -16792,18 +16853,19 @@ if ("development" !== "production") {
 
       renderExpirationTime = NoWork;
       currentlyRenderingFiber$1 = null;
-      firstCurrentHook = null;
       currentHook = null;
       nextCurrentHook = null;
       firstWorkInProgressHook = null;
       workInProgressHook = null;
       nextWorkInProgressHook = null;
+      {
+        hookTypesDev = null;
+        hookTypesUpdateIndexDev = -1;
+        currentHookNameInDev = null;
+      }
       remainingExpirationTime = NoWork;
       componentUpdateQueue = null;
       sideEffectTag = 0;
-      {
-        currentHookNameInDev = null;
-      }
       didScheduleRenderPhaseUpdate = false;
       renderPhaseUpdates = null;
       numberOfReRenders = 0;
@@ -16817,9 +16879,6 @@ if ("development" !== "production") {
         baseUpdate: null,
         next: null
       };
-      {
-        hook._debugType = currentHookNameInDev;
-      }
 
       if (workInProgressHook === null) {
         // This is the first hook in the list
@@ -16865,13 +16924,6 @@ if ("development" !== "production") {
         }
 
         nextCurrentHook = currentHook.next;
-        {
-          newHook._debugType = currentHookNameInDev;
-
-          if (currentHookNameInDev !== currentHook._debugType) {
-            warnOnHookMismatchInDev();
-          }
-        }
       }
 
       return workInProgressHook;
@@ -16885,20 +16937,6 @@ if ("development" !== "production") {
 
     function basicStateReducer(state, action) {
       return typeof action === 'function' ? action(state) : action;
-    }
-
-    function mountContext(context, observedBits) {
-      {
-        mountWorkInProgressHook();
-      }
-      return readContext(context, observedBits);
-    }
-
-    function updateContext(context, observedBits) {
-      {
-        updateWorkInProgressHook();
-      }
-      return readContext(context, observedBits);
     }
 
     function mountReducer(reducer, initialArg, init) {
@@ -17424,6 +17462,7 @@ if ("development" !== "production") {
       useDebugValue: throwInvalidHookError
     };
     var HooksDispatcherOnMountInDEV = null;
+    var HooksDispatcherOnMountWithHookTypesInDEV = null;
     var HooksDispatcherOnUpdateInDEV = null;
     var InvalidNestedHooksDispatcherOnMountInDEV = null;
     var InvalidNestedHooksDispatcherOnUpdateInDEV = null;
@@ -17442,26 +17481,32 @@ if ("development" !== "production") {
         },
         useCallback: function (callback, deps) {
           currentHookNameInDev = 'useCallback';
+          mountHookTypesDev();
           return mountCallback(callback, deps);
         },
         useContext: function (context, observedBits) {
           currentHookNameInDev = 'useContext';
-          return mountContext(context, observedBits);
+          mountHookTypesDev();
+          return readContext(context, observedBits);
         },
         useEffect: function (create, deps) {
           currentHookNameInDev = 'useEffect';
+          mountHookTypesDev();
           return mountEffect(create, deps);
         },
         useImperativeHandle: function (ref, create, deps) {
           currentHookNameInDev = 'useImperativeHandle';
+          mountHookTypesDev();
           return mountImperativeHandle(ref, create, deps);
         },
         useLayoutEffect: function (create, deps) {
           currentHookNameInDev = 'useLayoutEffect';
+          mountHookTypesDev();
           return mountLayoutEffect(create, deps);
         },
         useMemo: function (create, deps) {
           currentHookNameInDev = 'useMemo';
+          mountHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
 
@@ -17473,6 +17518,7 @@ if ("development" !== "production") {
         },
         useReducer: function (reducer, initialArg, init) {
           currentHookNameInDev = 'useReducer';
+          mountHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
 
@@ -17484,10 +17530,12 @@ if ("development" !== "production") {
         },
         useRef: function (initialValue) {
           currentHookNameInDev = 'useRef';
+          mountHookTypesDev();
           return mountRef(initialValue);
         },
         useState: function (initialState) {
           currentHookNameInDev = 'useState';
+          mountHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
 
@@ -17499,6 +17547,83 @@ if ("development" !== "production") {
         },
         useDebugValue: function (value, formatterFn) {
           currentHookNameInDev = 'useDebugValue';
+          mountHookTypesDev();
+          return mountDebugValue(value, formatterFn);
+        }
+      };
+      HooksDispatcherOnMountWithHookTypesInDEV = {
+        readContext: function (context, observedBits) {
+          return readContext(context, observedBits);
+        },
+        useCallback: function (callback, deps) {
+          currentHookNameInDev = 'useCallback';
+          updateHookTypesDev();
+          return mountCallback(callback, deps);
+        },
+        useContext: function (context, observedBits) {
+          currentHookNameInDev = 'useContext';
+          updateHookTypesDev();
+          return readContext(context, observedBits);
+        },
+        useEffect: function (create, deps) {
+          currentHookNameInDev = 'useEffect';
+          updateHookTypesDev();
+          return mountEffect(create, deps);
+        },
+        useImperativeHandle: function (ref, create, deps) {
+          currentHookNameInDev = 'useImperativeHandle';
+          updateHookTypesDev();
+          return mountImperativeHandle(ref, create, deps);
+        },
+        useLayoutEffect: function (create, deps) {
+          currentHookNameInDev = 'useLayoutEffect';
+          updateHookTypesDev();
+          return mountLayoutEffect(create, deps);
+        },
+        useMemo: function (create, deps) {
+          currentHookNameInDev = 'useMemo';
+          updateHookTypesDev();
+          var prevDispatcher = ReactCurrentDispatcher$1.current;
+          ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+
+          try {
+            return mountMemo(create, deps);
+          } finally {
+            ReactCurrentDispatcher$1.current = prevDispatcher;
+          }
+        },
+        useReducer: function (reducer, initialArg, init) {
+          currentHookNameInDev = 'useReducer';
+          updateHookTypesDev();
+          var prevDispatcher = ReactCurrentDispatcher$1.current;
+          ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+
+          try {
+            return mountReducer(reducer, initialArg, init);
+          } finally {
+            ReactCurrentDispatcher$1.current = prevDispatcher;
+          }
+        },
+        useRef: function (initialValue) {
+          currentHookNameInDev = 'useRef';
+          updateHookTypesDev();
+          return mountRef(initialValue);
+        },
+        useState: function (initialState) {
+          currentHookNameInDev = 'useState';
+          updateHookTypesDev();
+          var prevDispatcher = ReactCurrentDispatcher$1.current;
+          ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+
+          try {
+            return mountState(initialState);
+          } finally {
+            ReactCurrentDispatcher$1.current = prevDispatcher;
+          }
+        },
+        useDebugValue: function (value, formatterFn) {
+          currentHookNameInDev = 'useDebugValue';
+          updateHookTypesDev();
           return mountDebugValue(value, formatterFn);
         }
       };
@@ -17508,26 +17633,32 @@ if ("development" !== "production") {
         },
         useCallback: function (callback, deps) {
           currentHookNameInDev = 'useCallback';
+          updateHookTypesDev();
           return updateCallback(callback, deps);
         },
         useContext: function (context, observedBits) {
           currentHookNameInDev = 'useContext';
-          return updateContext(context, observedBits);
+          updateHookTypesDev();
+          return readContext(context, observedBits);
         },
         useEffect: function (create, deps) {
           currentHookNameInDev = 'useEffect';
+          updateHookTypesDev();
           return updateEffect(create, deps);
         },
         useImperativeHandle: function (ref, create, deps) {
           currentHookNameInDev = 'useImperativeHandle';
+          updateHookTypesDev();
           return updateImperativeHandle(ref, create, deps);
         },
         useLayoutEffect: function (create, deps) {
           currentHookNameInDev = 'useLayoutEffect';
+          updateHookTypesDev();
           return updateLayoutEffect(create, deps);
         },
         useMemo: function (create, deps) {
           currentHookNameInDev = 'useMemo';
+          updateHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
@@ -17539,6 +17670,7 @@ if ("development" !== "production") {
         },
         useReducer: function (reducer, initialArg, init) {
           currentHookNameInDev = 'useReducer';
+          updateHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
@@ -17550,10 +17682,12 @@ if ("development" !== "production") {
         },
         useRef: function (initialValue) {
           currentHookNameInDev = 'useRef';
+          updateHookTypesDev();
           return updateRef(initialValue);
         },
         useState: function (initialState) {
           currentHookNameInDev = 'useState';
+          updateHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
@@ -17565,6 +17699,7 @@ if ("development" !== "production") {
         },
         useDebugValue: function (value, formatterFn) {
           currentHookNameInDev = 'useDebugValue';
+          updateHookTypesDev();
           return updateDebugValue(value, formatterFn);
         }
       };
@@ -17576,31 +17711,37 @@ if ("development" !== "production") {
         useCallback: function (callback, deps) {
           currentHookNameInDev = 'useCallback';
           warnInvalidHookAccess();
+          mountHookTypesDev();
           return mountCallback(callback, deps);
         },
         useContext: function (context, observedBits) {
           currentHookNameInDev = 'useContext';
           warnInvalidHookAccess();
-          return mountContext(context, observedBits);
+          mountHookTypesDev();
+          return readContext(context, observedBits);
         },
         useEffect: function (create, deps) {
           currentHookNameInDev = 'useEffect';
           warnInvalidHookAccess();
+          mountHookTypesDev();
           return mountEffect(create, deps);
         },
         useImperativeHandle: function (ref, create, deps) {
           currentHookNameInDev = 'useImperativeHandle';
           warnInvalidHookAccess();
+          mountHookTypesDev();
           return mountImperativeHandle(ref, create, deps);
         },
         useLayoutEffect: function (create, deps) {
           currentHookNameInDev = 'useLayoutEffect';
           warnInvalidHookAccess();
+          mountHookTypesDev();
           return mountLayoutEffect(create, deps);
         },
         useMemo: function (create, deps) {
           currentHookNameInDev = 'useMemo';
           warnInvalidHookAccess();
+          mountHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
 
@@ -17613,6 +17754,7 @@ if ("development" !== "production") {
         useReducer: function (reducer, initialArg, init) {
           currentHookNameInDev = 'useReducer';
           warnInvalidHookAccess();
+          mountHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
 
@@ -17625,11 +17767,13 @@ if ("development" !== "production") {
         useRef: function (initialValue) {
           currentHookNameInDev = 'useRef';
           warnInvalidHookAccess();
+          mountHookTypesDev();
           return mountRef(initialValue);
         },
         useState: function (initialState) {
           currentHookNameInDev = 'useState';
           warnInvalidHookAccess();
+          mountHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
 
@@ -17642,6 +17786,7 @@ if ("development" !== "production") {
         useDebugValue: function (value, formatterFn) {
           currentHookNameInDev = 'useDebugValue';
           warnInvalidHookAccess();
+          mountHookTypesDev();
           return mountDebugValue(value, formatterFn);
         }
       };
@@ -17653,31 +17798,37 @@ if ("development" !== "production") {
         useCallback: function (callback, deps) {
           currentHookNameInDev = 'useCallback';
           warnInvalidHookAccess();
+          updateHookTypesDev();
           return updateCallback(callback, deps);
         },
         useContext: function (context, observedBits) {
           currentHookNameInDev = 'useContext';
           warnInvalidHookAccess();
-          return updateContext(context, observedBits);
+          updateHookTypesDev();
+          return readContext(context, observedBits);
         },
         useEffect: function (create, deps) {
           currentHookNameInDev = 'useEffect';
           warnInvalidHookAccess();
+          updateHookTypesDev();
           return updateEffect(create, deps);
         },
         useImperativeHandle: function (ref, create, deps) {
           currentHookNameInDev = 'useImperativeHandle';
           warnInvalidHookAccess();
+          updateHookTypesDev();
           return updateImperativeHandle(ref, create, deps);
         },
         useLayoutEffect: function (create, deps) {
           currentHookNameInDev = 'useLayoutEffect';
           warnInvalidHookAccess();
+          updateHookTypesDev();
           return updateLayoutEffect(create, deps);
         },
         useMemo: function (create, deps) {
           currentHookNameInDev = 'useMemo';
           warnInvalidHookAccess();
+          updateHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
@@ -17690,6 +17841,7 @@ if ("development" !== "production") {
         useReducer: function (reducer, initialArg, init) {
           currentHookNameInDev = 'useReducer';
           warnInvalidHookAccess();
+          updateHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
@@ -17702,11 +17854,13 @@ if ("development" !== "production") {
         useRef: function (initialValue) {
           currentHookNameInDev = 'useRef';
           warnInvalidHookAccess();
+          updateHookTypesDev();
           return updateRef(initialValue);
         },
         useState: function (initialState) {
           currentHookNameInDev = 'useState';
           warnInvalidHookAccess();
+          updateHookTypesDev();
           var prevDispatcher = ReactCurrentDispatcher$1.current;
           ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
@@ -17719,6 +17873,7 @@ if ("development" !== "production") {
         useDebugValue: function (value, formatterFn) {
           currentHookNameInDev = 'useDebugValue';
           warnInvalidHookAccess();
+          updateHookTypesDev();
           return updateDebugValue(value, formatterFn);
         }
       };
@@ -24971,7 +25126,7 @@ if ("development" !== "production") {
     } // TODO: this is special because it gets imported during build.
 
 
-    var ReactVersion = '16.8.3'; // TODO: This type is shared between the reconciler and ReactDOM, but will
+    var ReactVersion = '16.8.4'; // TODO: This type is shared between the reconciler and ReactDOM, but will
     // eventually be lifted out to the renderer.
 
     var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -25562,8 +25717,8 @@ function _inheritsLoose(subClass, superClass) {
   subClass.prototype.constructor = subClass;
   subClass.__proto__ = superClass;
 }
-},{}],"../node_modules/prop-types/node_modules/react-is/cjs/react-is.development.js":[function(require,module,exports) {
-/** @license React v16.8.3
+},{}],"../node_modules/react-is/cjs/react-is.development.js":[function(require,module,exports) {
+/** @license React v16.8.4
  * react-is.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -25803,7 +25958,7 @@ if ("development" !== "production") {
     exports.isSuspense = isSuspense;
   })();
 }
-},{}],"../node_modules/prop-types/node_modules/react-is/index.js":[function(require,module,exports) {
+},{}],"../node_modules/react-is/index.js":[function(require,module,exports) {
 'use strict';
 
 if ("development" === 'production') {
@@ -25811,7 +25966,7 @@ if ("development" === 'production') {
 } else {
   module.exports = require('./cjs/react-is.development.js');
 }
-},{"./cjs/react-is.development.js":"../node_modules/prop-types/node_modules/react-is/cjs/react-is.development.js"}],"../node_modules/prop-types/factoryWithTypeCheckers.js":[function(require,module,exports) {
+},{"./cjs/react-is.development.js":"../node_modules/react-is/cjs/react-is.development.js"}],"../node_modules/prop-types/factoryWithTypeCheckers.js":[function(require,module,exports) {
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -26455,7 +26610,7 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
   ReactPropTypes.PropTypes = ReactPropTypes;
   return ReactPropTypes;
 };
-},{"react-is":"../node_modules/prop-types/node_modules/react-is/index.js","object-assign":"../node_modules/object-assign/index.js","./lib/ReactPropTypesSecret":"../node_modules/prop-types/lib/ReactPropTypesSecret.js","./checkPropTypes":"../node_modules/prop-types/checkPropTypes.js"}],"../node_modules/prop-types/index.js":[function(require,module,exports) {
+},{"react-is":"../node_modules/react-is/index.js","object-assign":"../node_modules/object-assign/index.js","./lib/ReactPropTypesSecret":"../node_modules/prop-types/lib/ReactPropTypesSecret.js","./checkPropTypes":"../node_modules/prop-types/checkPropTypes.js"}],"../node_modules/prop-types/index.js":[function(require,module,exports) {
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -26474,7 +26629,7 @@ if ("development" !== 'production') {
   // http://fb.me/prop-types-in-prod
   module.exports = require('./factoryWithThrowingShims')();
 }
-},{"react-is":"../node_modules/prop-types/node_modules/react-is/index.js","./factoryWithTypeCheckers":"../node_modules/prop-types/factoryWithTypeCheckers.js"}],"../node_modules/react-redux/es/components/Context.js":[function(require,module,exports) {
+},{"react-is":"../node_modules/react-is/index.js","./factoryWithTypeCheckers":"../node_modules/prop-types/factoryWithTypeCheckers.js"}],"../node_modules/react-redux/es/components/Context.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -26662,256 +26817,7 @@ function _objectWithoutPropertiesLoose(source, excluded) {
 
   return target;
 }
-},{}],"../node_modules/react-is/cjs/react-is.development.js":[function(require,module,exports) {
-/** @license React v16.8.4
- * react-is.development.js
- *
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-'use strict';
-
-if ("development" !== "production") {
-  (function () {
-    'use strict';
-
-    Object.defineProperty(exports, '__esModule', {
-      value: true
-    }); // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
-    // nor polyfill, then a plain number is used for performance.
-
-    var hasSymbol = typeof Symbol === 'function' && Symbol.for;
-    var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
-    var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for('react.portal') : 0xeaca;
-    var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for('react.fragment') : 0xeacb;
-    var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for('react.strict_mode') : 0xeacc;
-    var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for('react.profiler') : 0xead2;
-    var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for('react.provider') : 0xeacd;
-    var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace;
-    var REACT_ASYNC_MODE_TYPE = hasSymbol ? Symbol.for('react.async_mode') : 0xeacf;
-    var REACT_CONCURRENT_MODE_TYPE = hasSymbol ? Symbol.for('react.concurrent_mode') : 0xeacf;
-    var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for('react.forward_ref') : 0xead0;
-    var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for('react.suspense') : 0xead1;
-    var REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
-    var REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
-
-    function isValidElementType(type) {
-      return typeof type === 'string' || typeof type === 'function' || // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
-      type === REACT_FRAGMENT_TYPE || type === REACT_CONCURRENT_MODE_TYPE || type === REACT_PROFILER_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || typeof type === 'object' && type !== null && (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE);
-    }
-    /**
-     * Forked from fbjs/warning:
-     * https://github.com/facebook/fbjs/blob/e66ba20ad5be433eb54423f2b097d829324d9de6/packages/fbjs/src/__forks__/warning.js
-     *
-     * Only change is we use console.warn instead of console.error,
-     * and do nothing when 'console' is not supported.
-     * This really simplifies the code.
-     * ---
-     * Similar to invariant but only logs a warning if the condition is not met.
-     * This can be used to log issues in development environments in critical
-     * paths. Removing the logging code for production environments will keep the
-     * same logic and follow the same code paths.
-     */
-
-
-    var lowPriorityWarning = function () {};
-
-    {
-      var printWarning = function (format) {
-        for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          args[_key - 1] = arguments[_key];
-        }
-
-        var argIndex = 0;
-        var message = 'Warning: ' + format.replace(/%s/g, function () {
-          return args[argIndex++];
-        });
-
-        if (typeof console !== 'undefined') {
-          console.warn(message);
-        }
-
-        try {
-          // --- Welcome to debugging React ---
-          // This error was thrown as a convenience so that you can use this stack
-          // to find the callsite that caused this warning to fire.
-          throw new Error(message);
-        } catch (x) {}
-      };
-
-      lowPriorityWarning = function (condition, format) {
-        if (format === undefined) {
-          throw new Error('`lowPriorityWarning(condition, format, ...args)` requires a warning ' + 'message argument');
-        }
-
-        if (!condition) {
-          for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-            args[_key2 - 2] = arguments[_key2];
-          }
-
-          printWarning.apply(undefined, [format].concat(args));
-        }
-      };
-    }
-    var lowPriorityWarning$1 = lowPriorityWarning;
-
-    function typeOf(object) {
-      if (typeof object === 'object' && object !== null) {
-        var $$typeof = object.$$typeof;
-
-        switch ($$typeof) {
-          case REACT_ELEMENT_TYPE:
-            var type = object.type;
-
-            switch (type) {
-              case REACT_ASYNC_MODE_TYPE:
-              case REACT_CONCURRENT_MODE_TYPE:
-              case REACT_FRAGMENT_TYPE:
-              case REACT_PROFILER_TYPE:
-              case REACT_STRICT_MODE_TYPE:
-              case REACT_SUSPENSE_TYPE:
-                return type;
-
-              default:
-                var $$typeofType = type && type.$$typeof;
-
-                switch ($$typeofType) {
-                  case REACT_CONTEXT_TYPE:
-                  case REACT_FORWARD_REF_TYPE:
-                  case REACT_PROVIDER_TYPE:
-                    return $$typeofType;
-
-                  default:
-                    return $$typeof;
-                }
-
-            }
-
-          case REACT_LAZY_TYPE:
-          case REACT_MEMO_TYPE:
-          case REACT_PORTAL_TYPE:
-            return $$typeof;
-        }
-      }
-
-      return undefined;
-    } // AsyncMode is deprecated along with isAsyncMode
-
-
-    var AsyncMode = REACT_ASYNC_MODE_TYPE;
-    var ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
-    var ContextConsumer = REACT_CONTEXT_TYPE;
-    var ContextProvider = REACT_PROVIDER_TYPE;
-    var Element = REACT_ELEMENT_TYPE;
-    var ForwardRef = REACT_FORWARD_REF_TYPE;
-    var Fragment = REACT_FRAGMENT_TYPE;
-    var Lazy = REACT_LAZY_TYPE;
-    var Memo = REACT_MEMO_TYPE;
-    var Portal = REACT_PORTAL_TYPE;
-    var Profiler = REACT_PROFILER_TYPE;
-    var StrictMode = REACT_STRICT_MODE_TYPE;
-    var Suspense = REACT_SUSPENSE_TYPE;
-    var hasWarnedAboutDeprecatedIsAsyncMode = false; // AsyncMode should be deprecated
-
-    function isAsyncMode(object) {
-      {
-        if (!hasWarnedAboutDeprecatedIsAsyncMode) {
-          hasWarnedAboutDeprecatedIsAsyncMode = true;
-          lowPriorityWarning$1(false, 'The ReactIs.isAsyncMode() alias has been deprecated, ' + 'and will be removed in React 17+. Update your code to use ' + 'ReactIs.isConcurrentMode() instead. It has the exact same API.');
-        }
-      }
-      return isConcurrentMode(object) || typeOf(object) === REACT_ASYNC_MODE_TYPE;
-    }
-
-    function isConcurrentMode(object) {
-      return typeOf(object) === REACT_CONCURRENT_MODE_TYPE;
-    }
-
-    function isContextConsumer(object) {
-      return typeOf(object) === REACT_CONTEXT_TYPE;
-    }
-
-    function isContextProvider(object) {
-      return typeOf(object) === REACT_PROVIDER_TYPE;
-    }
-
-    function isElement(object) {
-      return typeof object === 'object' && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
-    }
-
-    function isForwardRef(object) {
-      return typeOf(object) === REACT_FORWARD_REF_TYPE;
-    }
-
-    function isFragment(object) {
-      return typeOf(object) === REACT_FRAGMENT_TYPE;
-    }
-
-    function isLazy(object) {
-      return typeOf(object) === REACT_LAZY_TYPE;
-    }
-
-    function isMemo(object) {
-      return typeOf(object) === REACT_MEMO_TYPE;
-    }
-
-    function isPortal(object) {
-      return typeOf(object) === REACT_PORTAL_TYPE;
-    }
-
-    function isProfiler(object) {
-      return typeOf(object) === REACT_PROFILER_TYPE;
-    }
-
-    function isStrictMode(object) {
-      return typeOf(object) === REACT_STRICT_MODE_TYPE;
-    }
-
-    function isSuspense(object) {
-      return typeOf(object) === REACT_SUSPENSE_TYPE;
-    }
-
-    exports.typeOf = typeOf;
-    exports.AsyncMode = AsyncMode;
-    exports.ConcurrentMode = ConcurrentMode;
-    exports.ContextConsumer = ContextConsumer;
-    exports.ContextProvider = ContextProvider;
-    exports.Element = Element;
-    exports.ForwardRef = ForwardRef;
-    exports.Fragment = Fragment;
-    exports.Lazy = Lazy;
-    exports.Memo = Memo;
-    exports.Portal = Portal;
-    exports.Profiler = Profiler;
-    exports.StrictMode = StrictMode;
-    exports.Suspense = Suspense;
-    exports.isValidElementType = isValidElementType;
-    exports.isAsyncMode = isAsyncMode;
-    exports.isConcurrentMode = isConcurrentMode;
-    exports.isContextConsumer = isContextConsumer;
-    exports.isContextProvider = isContextProvider;
-    exports.isElement = isElement;
-    exports.isForwardRef = isForwardRef;
-    exports.isFragment = isFragment;
-    exports.isLazy = isLazy;
-    exports.isMemo = isMemo;
-    exports.isPortal = isPortal;
-    exports.isProfiler = isProfiler;
-    exports.isStrictMode = isStrictMode;
-    exports.isSuspense = isSuspense;
-  })();
-}
-},{}],"../node_modules/react-is/index.js":[function(require,module,exports) {
-'use strict';
-
-if ("development" === 'production') {
-  module.exports = require('./cjs/react-is.production.min.js');
-} else {
-  module.exports = require('./cjs/react-is.development.js');
-}
-},{"./cjs/react-is.development.js":"../node_modules/react-is/cjs/react-is.development.js"}],"../node_modules/react-redux/node_modules/hoist-non-react-statics/dist/hoist-non-react-statics.cjs.js":[function(require,module,exports) {
+},{}],"../node_modules/react-redux/node_modules/hoist-non-react-statics/dist/hoist-non-react-statics.cjs.js":[function(require,module,exports) {
 'use strict';
 
 /**
@@ -42878,256 +42784,7 @@ function disallowedIf(propType, otherPropName, otherPropType) {
   });
 }
 
-},{"./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/node_modules/react-is/cjs/react-is.development.js":[function(require,module,exports) {
-/** @license React v16.8.3
- * react-is.development.js
- *
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-'use strict';
-
-if ("development" !== "production") {
-  (function () {
-    'use strict';
-
-    Object.defineProperty(exports, '__esModule', {
-      value: true
-    }); // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
-    // nor polyfill, then a plain number is used for performance.
-
-    var hasSymbol = typeof Symbol === 'function' && Symbol.for;
-    var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
-    var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for('react.portal') : 0xeaca;
-    var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for('react.fragment') : 0xeacb;
-    var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for('react.strict_mode') : 0xeacc;
-    var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for('react.profiler') : 0xead2;
-    var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for('react.provider') : 0xeacd;
-    var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace;
-    var REACT_ASYNC_MODE_TYPE = hasSymbol ? Symbol.for('react.async_mode') : 0xeacf;
-    var REACT_CONCURRENT_MODE_TYPE = hasSymbol ? Symbol.for('react.concurrent_mode') : 0xeacf;
-    var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for('react.forward_ref') : 0xead0;
-    var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for('react.suspense') : 0xead1;
-    var REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
-    var REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
-
-    function isValidElementType(type) {
-      return typeof type === 'string' || typeof type === 'function' || // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
-      type === REACT_FRAGMENT_TYPE || type === REACT_CONCURRENT_MODE_TYPE || type === REACT_PROFILER_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || typeof type === 'object' && type !== null && (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE);
-    }
-    /**
-     * Forked from fbjs/warning:
-     * https://github.com/facebook/fbjs/blob/e66ba20ad5be433eb54423f2b097d829324d9de6/packages/fbjs/src/__forks__/warning.js
-     *
-     * Only change is we use console.warn instead of console.error,
-     * and do nothing when 'console' is not supported.
-     * This really simplifies the code.
-     * ---
-     * Similar to invariant but only logs a warning if the condition is not met.
-     * This can be used to log issues in development environments in critical
-     * paths. Removing the logging code for production environments will keep the
-     * same logic and follow the same code paths.
-     */
-
-
-    var lowPriorityWarning = function () {};
-
-    {
-      var printWarning = function (format) {
-        for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          args[_key - 1] = arguments[_key];
-        }
-
-        var argIndex = 0;
-        var message = 'Warning: ' + format.replace(/%s/g, function () {
-          return args[argIndex++];
-        });
-
-        if (typeof console !== 'undefined') {
-          console.warn(message);
-        }
-
-        try {
-          // --- Welcome to debugging React ---
-          // This error was thrown as a convenience so that you can use this stack
-          // to find the callsite that caused this warning to fire.
-          throw new Error(message);
-        } catch (x) {}
-      };
-
-      lowPriorityWarning = function (condition, format) {
-        if (format === undefined) {
-          throw new Error('`lowPriorityWarning(condition, format, ...args)` requires a warning ' + 'message argument');
-        }
-
-        if (!condition) {
-          for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-            args[_key2 - 2] = arguments[_key2];
-          }
-
-          printWarning.apply(undefined, [format].concat(args));
-        }
-      };
-    }
-    var lowPriorityWarning$1 = lowPriorityWarning;
-
-    function typeOf(object) {
-      if (typeof object === 'object' && object !== null) {
-        var $$typeof = object.$$typeof;
-
-        switch ($$typeof) {
-          case REACT_ELEMENT_TYPE:
-            var type = object.type;
-
-            switch (type) {
-              case REACT_ASYNC_MODE_TYPE:
-              case REACT_CONCURRENT_MODE_TYPE:
-              case REACT_FRAGMENT_TYPE:
-              case REACT_PROFILER_TYPE:
-              case REACT_STRICT_MODE_TYPE:
-              case REACT_SUSPENSE_TYPE:
-                return type;
-
-              default:
-                var $$typeofType = type && type.$$typeof;
-
-                switch ($$typeofType) {
-                  case REACT_CONTEXT_TYPE:
-                  case REACT_FORWARD_REF_TYPE:
-                  case REACT_PROVIDER_TYPE:
-                    return $$typeofType;
-
-                  default:
-                    return $$typeof;
-                }
-
-            }
-
-          case REACT_LAZY_TYPE:
-          case REACT_MEMO_TYPE:
-          case REACT_PORTAL_TYPE:
-            return $$typeof;
-        }
-      }
-
-      return undefined;
-    } // AsyncMode is deprecated along with isAsyncMode
-
-
-    var AsyncMode = REACT_ASYNC_MODE_TYPE;
-    var ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
-    var ContextConsumer = REACT_CONTEXT_TYPE;
-    var ContextProvider = REACT_PROVIDER_TYPE;
-    var Element = REACT_ELEMENT_TYPE;
-    var ForwardRef = REACT_FORWARD_REF_TYPE;
-    var Fragment = REACT_FRAGMENT_TYPE;
-    var Lazy = REACT_LAZY_TYPE;
-    var Memo = REACT_MEMO_TYPE;
-    var Portal = REACT_PORTAL_TYPE;
-    var Profiler = REACT_PROFILER_TYPE;
-    var StrictMode = REACT_STRICT_MODE_TYPE;
-    var Suspense = REACT_SUSPENSE_TYPE;
-    var hasWarnedAboutDeprecatedIsAsyncMode = false; // AsyncMode should be deprecated
-
-    function isAsyncMode(object) {
-      {
-        if (!hasWarnedAboutDeprecatedIsAsyncMode) {
-          hasWarnedAboutDeprecatedIsAsyncMode = true;
-          lowPriorityWarning$1(false, 'The ReactIs.isAsyncMode() alias has been deprecated, ' + 'and will be removed in React 17+. Update your code to use ' + 'ReactIs.isConcurrentMode() instead. It has the exact same API.');
-        }
-      }
-      return isConcurrentMode(object) || typeOf(object) === REACT_ASYNC_MODE_TYPE;
-    }
-
-    function isConcurrentMode(object) {
-      return typeOf(object) === REACT_CONCURRENT_MODE_TYPE;
-    }
-
-    function isContextConsumer(object) {
-      return typeOf(object) === REACT_CONTEXT_TYPE;
-    }
-
-    function isContextProvider(object) {
-      return typeOf(object) === REACT_PROVIDER_TYPE;
-    }
-
-    function isElement(object) {
-      return typeof object === 'object' && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
-    }
-
-    function isForwardRef(object) {
-      return typeOf(object) === REACT_FORWARD_REF_TYPE;
-    }
-
-    function isFragment(object) {
-      return typeOf(object) === REACT_FRAGMENT_TYPE;
-    }
-
-    function isLazy(object) {
-      return typeOf(object) === REACT_LAZY_TYPE;
-    }
-
-    function isMemo(object) {
-      return typeOf(object) === REACT_MEMO_TYPE;
-    }
-
-    function isPortal(object) {
-      return typeOf(object) === REACT_PORTAL_TYPE;
-    }
-
-    function isProfiler(object) {
-      return typeOf(object) === REACT_PROFILER_TYPE;
-    }
-
-    function isStrictMode(object) {
-      return typeOf(object) === REACT_STRICT_MODE_TYPE;
-    }
-
-    function isSuspense(object) {
-      return typeOf(object) === REACT_SUSPENSE_TYPE;
-    }
-
-    exports.typeOf = typeOf;
-    exports.AsyncMode = AsyncMode;
-    exports.ConcurrentMode = ConcurrentMode;
-    exports.ContextConsumer = ContextConsumer;
-    exports.ContextProvider = ContextProvider;
-    exports.Element = Element;
-    exports.ForwardRef = ForwardRef;
-    exports.Fragment = Fragment;
-    exports.Lazy = Lazy;
-    exports.Memo = Memo;
-    exports.Portal = Portal;
-    exports.Profiler = Profiler;
-    exports.StrictMode = StrictMode;
-    exports.Suspense = Suspense;
-    exports.isValidElementType = isValidElementType;
-    exports.isAsyncMode = isAsyncMode;
-    exports.isConcurrentMode = isConcurrentMode;
-    exports.isContextConsumer = isContextConsumer;
-    exports.isContextProvider = isContextProvider;
-    exports.isElement = isElement;
-    exports.isForwardRef = isForwardRef;
-    exports.isFragment = isFragment;
-    exports.isLazy = isLazy;
-    exports.isMemo = isMemo;
-    exports.isPortal = isPortal;
-    exports.isProfiler = isProfiler;
-    exports.isStrictMode = isStrictMode;
-    exports.isSuspense = isSuspense;
-  })();
-}
-},{}],"../node_modules/airbnb-prop-types/node_modules/react-is/index.js":[function(require,module,exports) {
-'use strict';
-
-if ("development" === 'production') {
-  module.exports = require('./cjs/react-is.production.min.js');
-} else {
-  module.exports = require('./cjs/react-is.development.js');
-}
-},{"./cjs/react-is.development.js":"../node_modules/airbnb-prop-types/node_modules/react-is/cjs/react-is.development.js"}],"../node_modules/airbnb-prop-types/build/elementType.js":[function(require,module,exports) {
+},{"./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/elementType.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -43199,7 +42856,7 @@ function elementTypeValidator(Type) {
   return (0, _wrapValidator["default"])((0, _and["default"])([_propTypes.element, elementType], validatorName), validatorName, Type);
 }
 
-},{"prop-types":"../node_modules/prop-types/index.js","react-is":"../node_modules/airbnb-prop-types/node_modules/react-is/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./helpers/getComponentName":"../node_modules/airbnb-prop-types/build/helpers/getComponentName.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/or.js":[function(require,module,exports) {
+},{"prop-types":"../node_modules/prop-types/index.js","react-is":"../node_modules/react-is/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./helpers/getComponentName":"../node_modules/airbnb-prop-types/build/helpers/getComponentName.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/or.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48755,7 +48412,92 @@ define(polyfill, {
   shim: shim
 });
 module.exports = polyfill;
-},{"define-properties":"../node_modules/define-properties/index.js","./implementation":"../node_modules/object.values/implementation.js","./polyfill":"../node_modules/object.values/polyfill.js","./shim":"../node_modules/object.values/shim.js"}],"../node_modules/react-outside-click-handler/build/OutsideClickHandler.js":[function(require,module,exports) {
+},{"define-properties":"../node_modules/define-properties/index.js","./implementation":"../node_modules/object.values/implementation.js","./polyfill":"../node_modules/object.values/polyfill.js","./shim":"../node_modules/object.values/shim.js"}],"../node_modules/document.contains/implementation.js":[function(require,module,exports) {
+'use strict';
+
+module.exports = function contains(other) {
+	if (arguments.length < 1) {
+		throw new TypeError('1 argument is required');
+	}
+	if (typeof other !== 'object') {
+		throw new TypeError('Argument 1 (”other“) to Node.contains must be an instance of Node');
+	}
+
+	var node = other;
+	do {
+		if (this === node) {
+			return true;
+		}
+		if (node) {
+			node = node.parentNode;
+		}
+	} while (node);
+
+	return false;
+};
+
+},{}],"../node_modules/document.contains/polyfill.js":[function(require,module,exports) {
+'use strict';
+
+var implementation = require('./implementation');
+
+module.exports = function getPolyfill() {
+	if (typeof document === 'undefined') {
+		return implementation;
+	}
+	return document.contains || document.body.contains || implementation;
+};
+
+},{"./implementation":"../node_modules/document.contains/implementation.js"}],"../node_modules/document.contains/shim.js":[function(require,module,exports) {
+
+'use strict';
+
+var define = require('define-properties');
+var getPolyfill = require('./polyfill');
+
+module.exports = function shimContains() {
+	var polyfill = getPolyfill();
+	if (typeof document !== 'undefined') {
+		define(
+			document,
+			{ contains: polyfill },
+			{ contains: function () { return document.contains !== polyfill; } }
+		);
+		if (typeof Element !== 'undefined') {
+			define(
+				Element.prototype,
+				{ contains: polyfill },
+				{ contains: function () { return Element.prototype.contains !== polyfill; } }
+			);
+		}
+	}
+	return polyfill;
+};
+
+},{"define-properties":"../node_modules/define-properties/index.js","./polyfill":"../node_modules/document.contains/polyfill.js"}],"../node_modules/document.contains/index.js":[function(require,module,exports) {
+
+'use strict';
+
+var define = require('define-properties');
+
+var implementation = require('./implementation');
+var getPolyfill = require('./polyfill');
+var polyfill = getPolyfill();
+var shim = require('./shim');
+
+var boundContains = function contains(node, other) {
+	return polyfill.apply(node, [other]);
+};
+
+define(boundContains, {
+	getPolyfill: getPolyfill,
+	implementation: implementation,
+	shim: shim
+});
+
+module.exports = boundContains;
+
+},{"define-properties":"../node_modules/define-properties/index.js","./implementation":"../node_modules/document.contains/implementation.js","./polyfill":"../node_modules/document.contains/polyfill.js","./shim":"../node_modules/document.contains/shim.js"}],"../node_modules/react-outside-click-handler/build/OutsideClickHandler.js":[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -48779,6 +48521,10 @@ var _consolidatedEvents = require('consolidated-events');
 var _object = require('object.values');
 
 var _object2 = _interopRequireDefault(_object);
+
+var _document = require('document.contains');
+
+var _document2 = _interopRequireDefault(_document);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -48885,7 +48631,7 @@ var OutsideClickHandler = function (_React$Component) {
         var useCapture = this.props.useCapture;
 
 
-        var isDescendantOfRoot = this.childNode && this.childNode.contains(e.target);
+        var isDescendantOfRoot = this.childNode && (0, _document2['default'])(this.childNode, e.target);
         if (!isDescendantOfRoot) {
           this.removeMouseUp = (0, _consolidatedEvents.addEventListener)(document, 'mouseup', this.onMouseUp, { capture: useCapture });
         }
@@ -48905,7 +48651,7 @@ var OutsideClickHandler = function (_React$Component) {
         var onOutsideClick = this.props.onOutsideClick;
 
 
-        var isDescendantOfRoot = this.childNode && this.childNode.contains(e.target);
+        var isDescendantOfRoot = this.childNode && (0, _document2['default'])(this.childNode, e.target);
         if (this.removeMouseUp) this.removeMouseUp();
         this.removeMouseUp = null;
 
@@ -48975,7 +48721,7 @@ exports['default'] = OutsideClickHandler;
 
 OutsideClickHandler.propTypes = propTypes;
 OutsideClickHandler.defaultProps = defaultProps;
-},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","airbnb-prop-types":"../node_modules/airbnb-prop-types/index.js","consolidated-events":"../node_modules/consolidated-events/lib/index.esm.js","object.values":"../node_modules/object.values/index.js"}],"../node_modules/react-outside-click-handler/index.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","airbnb-prop-types":"../node_modules/airbnb-prop-types/index.js","consolidated-events":"../node_modules/consolidated-events/lib/index.esm.js","object.values":"../node_modules/object.values/index.js","document.contains":"../node_modules/document.contains/index.js"}],"../node_modules/react-outside-click-handler/index.js":[function(require,module,exports) {
 // eslint-disable-next-line import/no-unresolved
 module.exports = require('./build/OutsideClickHandler');
 
@@ -62218,7 +61964,7 @@ var _default = function _default() {
 };
 
 exports.default = _default;
-},{"redux":"../node_modules/redux/es/redux.js","../reducers/expenses":"reducers/expenses.js","../reducers/filters":"reducers/filters.js"}],"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
+},{"redux":"../node_modules/redux/es/redux.js","../reducers/expenses":"reducers/expenses.js","../reducers/filters":"reducers/filters.js"}],"../node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
 var bundleURL = null;
 
 function getBundleURLCached() {
@@ -62250,7 +61996,7 @@ function getBaseURL(url) {
 
 exports.getBundleURL = getBundleURLCached;
 exports.getBaseURL = getBaseURL;
-},{}],"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
+},{}],"../node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
 var bundle = require('./bundle-url');
 
 function updateLink(link) {
@@ -62285,51 +62031,24 @@ function reloadCSS() {
 }
 
 module.exports = reloadCSS;
-},{"./bundle-url":"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"../node_modules/normalize.css/normalize.css":[function(require,module,exports) {
+},{"./bundle-url":"../node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"../node_modules/normalize.css/normalize.css":[function(require,module,exports) {
 
         var reloadCSS = require('_css_loader');
         module.hot.dispose(reloadCSS);
         module.hot.accept(reloadCSS);
       
-},{"_css_loader":"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/css-loader.js"}],"styles/main.scss":[function(require,module,exports) {
+},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"styles/main.scss":[function(require,module,exports) {
 var reloadCSS = require('_css_loader');
 
 module.hot.dispose(reloadCSS);
 module.hot.accept(reloadCSS);
-},{"_css_loader":"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/css-loader.js"}],"../node_modules/react-dates/lib/css/_datepicker.css":[function(require,module,exports) {
+},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"../node_modules/react-dates/lib/css/_datepicker.css":[function(require,module,exports) {
 
         var reloadCSS = require('_css_loader');
         module.hot.dispose(reloadCSS);
         module.hot.accept(reloadCSS);
       
-},{"_css_loader":"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/css-loader.js"}],"locales/ge.js":[function(require,module,exports) {
-"use strict";
-
-var _numeral = _interopRequireDefault(require("numeral"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-_numeral.default.register('locale', 'ge', {
-  delimiters: {
-    thousands: ' ',
-    decimal: ','
-  },
-  abbreviations: {
-    thousand: 'k',
-    million: 'm',
-    billion: 'b',
-    trillion: 't'
-  },
-  ordinal: function ordinal(number) {
-    return number === 1 ? 'er' : 'ème';
-  },
-  currency: {
-    symbol: '₾'
-  }
-});
-
-_numeral.default.locale('ge');
-},{"numeral":"../node_modules/numeral/numeral.js"}],"app.js":[function(require,module,exports) {
+},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"app.js":[function(require,module,exports) {
 "use strict";
 
 var _react = _interopRequireDefault(require("react"));
@@ -62348,8 +62067,6 @@ require("./styles/main.scss");
 
 require("react-dates/lib/css/_datepicker.css");
 
-require("./locales/ge");
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var store = (0, _configureStore.default)();
@@ -62359,7 +62076,7 @@ var jsx = _react.default.createElement(_reactRedux.Provider, {
 }, _react.default.createElement(_AppRouter.default, null));
 
 _reactDom.default.render(jsx, document.getElementById('app'));
-},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","react-redux":"../node_modules/react-redux/es/index.js","./routes/AppRouter":"routes/AppRouter.js","./store/configureStore":"store/configureStore.js","normalize.css/normalize.css":"../node_modules/normalize.css/normalize.css","./styles/main.scss":"styles/main.scss","react-dates/lib/css/_datepicker.css":"../node_modules/react-dates/lib/css/_datepicker.css","./locales/ge":"locales/ge.js"}],"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","react-redux":"../node_modules/react-redux/es/index.js","./routes/AppRouter":"routes/AppRouter.js","./store/configureStore":"store/configureStore.js","normalize.css/normalize.css":"../node_modules/normalize.css/normalize.css","./styles/main.scss":"styles/main.scss","react-dates/lib/css/_datepicker.css":"../node_modules/react-dates/lib/css/_datepicker.css"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -62387,7 +62104,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50986" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51891" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -62562,5 +62279,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","app.js"], null)
+},{}]},{},["../node_modules/parcel-bundler/src/builtins/hmr-runtime.js","app.js"], null)
 //# sourceMappingURL=/app.c328ef1a.js.map
