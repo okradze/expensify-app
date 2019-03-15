@@ -5,9 +5,9 @@
   "license": "MIT",
   "scripts": {
     "serve": "live-server dist/",
-    "start": "webpack-dev-server --config webpack.dev.js --open",
+    "start": "webpack-dev-server --config webpack.dev.js --port 5500",
     "build": "webpack --config webpack.prod.js",
-    "test": "jest components/ExpensesSummary --config=jest.config.json"
+    "test": "jest actions/expenses --config=jest.config.json"
   },
   "dependencies": {
     "express": "^4.16.4",
@@ -23,7 +23,8 @@
     "react-modal": "^3.8.1",
     "react-redux": "^6.0.1",
     "react-router-dom": "^4.3.1",
-    "redux": "^4.0.1"
+    "redux": "^4.0.1",
+    "redux-thunk": "^2.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.3.4",
@@ -46,6 +47,7 @@
     "node-sass": "^4.11.0",
     "optimize-css-assets-webpack-plugin": "^5.0.1",
     "react-test-renderer": "^16.8.4",
+    "redux-mock-store": "^1.5.3",
     "sass": "^1.17.2",
     "sass-loader": "^7.1.0",
     "style-loader": "^0.23.1",

@@ -11,9 +11,11 @@ const config = {
 
 firebase.initializeApp(config);
 
-const database = firebase.database();
+const db = firebase.database();
 
-const getExpenses = (snapshot) => {
+export { firebase, db as default };
+
+/* const getExpenses = (snapshot) => {
     const expenses = [];
     snapshot.forEach((child) => {
         expenses.push({
@@ -29,7 +31,7 @@ database.ref('expenses').on('child_removed', getExpenses);
 database.ref('expenses').on('child_changed', getExpenses);
 database.ref('expenses').on('child_added', getExpenses);
 
-/*database.ref('expenses').push({
+database.ref('expenses').push({
     description: 'Rent',
     note: '',
     amount: 125000,

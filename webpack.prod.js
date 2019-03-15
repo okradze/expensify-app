@@ -28,9 +28,6 @@ module.exports = merge(common, {
             }
         ]
     },
-    resolve: {
-        extensions: ['.js', '.jsx'],
-    },
     optimization: {
         splitChunks: {
             cacheGroups: {

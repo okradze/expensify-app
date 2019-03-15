@@ -26,7 +26,7 @@ module.exports = merge(common, {
             template: './src/template.html'
         })
     ],
-    devtool: 'cheap-eval-source-map',
+    devtool: 'cheap-module-eval-source-map',
     devServer: {
         contentBase: path.join(__dirname, 'dist'),
         historyApiFallback: true

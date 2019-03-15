@@ -23,20 +23,20 @@ const expenses = [{
     createdAt: moment(0).add(4, 'days').valueOf()
 }];
 
-let onSubmit, history, wrapper;
+let startAddExpense, history, wrapper;
 
 beforeEach(() => {
-    onSubmit = jest.fn();
+    startAddExpense = jest.fn();
     history = { push: jest.fn() };
-    wrapper = shallow(<AddExpensePage addExpense={addExpense} history={history} />);
+    wrapper = shallow(<AddExpensePage startAddExpense={startAddExpense} history={history} />);
 });
 
 test('should render AddExpensePage correctly', () => {
     expect(wrapper).toMatchSnapshot();
 });
 
-test('should handle onSubmit', () => {
+test('should handle startAddExpense', () => {
     wrapper.find('ExpenseForm').prop('onSubmit')(expenses[0]);
     expect(history.push).toHaveBeenLastCalledWith('/');
-    expect(onSubmit).toHaveBeenLastCalledWith(expenses[0]);
+    expect(startAddExpense).toHaveBeenLastCalledWith(expenses[0]);
 });
