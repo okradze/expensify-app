@@ -1,27 +1,38 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
-import { startAddExpense,addExpense, removeExpense, editExpense } from '../../actions/expenses';
+import { startAddExpense, addExpense, removeExpense, editExpense, setExpenses, startSetExpenses } from '../../actions/expenses';
 import moment from 'moment';
 import db from '../../firebase/firebase';
 
 const createMockStore = configureMockStore([thunk]);
 
 const expenses = [{
+    id: '1',
     description: 'Rent',
     note: '',
     amount: 125000,
     createdAt: 0
 }, {
+    id: '2',
     description: 'Water bill',
     note: '',
     amount: 1000,
     createdAt: moment(0).subtract(4, 'days').valueOf()
 }, {
+    id: '3',
     description: 'Gum',
     note: '',
     amount: 195,
     createdAt: moment(0).add(4, 'days').valueOf()
 }];
+
+beforeEach((done) => {
+    const expensesData = {};
+    expenses.forEach(({ id, description, note, amount, createdAt }) => {
+        expensesData[id] = { description, note, amount, createdAt }
+    });
+    db.ref('expenses').set(expensesData).then(() => done());
+});
 
 test('should set up remove expense action object', () => {
     const action = removeExpense({ id: '123' });
@@ -94,6 +105,26 @@ test('should add expense with defaults to db and store', (done) => {
         return db.ref(`expenses/${action.expense.id}`).once('value');
     }).then((snapshot) => {
         expect(snapshot.val()).toEqual(defaultValues);
+        done();
+    });
+});
+
+test('should setup set expense action object with date', () => {
+    const action = setExpenses(expenses);
+    expect(action).toEqual({
+        type: 'SET_EXPENSES',
+        expenses
+    })
+});
+
+test('should fetch the expenses from firebase db', (done) => {
+    const store = createMockStore({});
+    store.dispatch(startSetExpenses()).then(() => {
+        const action = store.getActions()[0];
+        expect(action).toEqual({
+            type: 'SET_EXPENSES',
+            expenses
+        });
         done();
     });
 });
