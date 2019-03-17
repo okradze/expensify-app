@@ -1,0 +1,15 @@
+.button {
+    display: inline-block;
+    padding: $s-size;
+    font-size: $font-large;
+    font-weight: 300;
+    border: none;
+    border-radius: 1px;
+    text-decoration: none;
+    line-height: 1;
+    background: none;
+    color: #fff;
+}
+.button--blue {
+    background-color: $blue;
+}
