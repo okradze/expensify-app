@@ -1,0 +1,22 @@
+.input-group {
+    display: flex;
+    margin-bottom: $l-size;
+    
+    @media only screen and (max-width: $mobile-breakpoint) {
+        flex-direction: column;
+        margin-bottom: $m-size;
+    }
+
+    &__item {
+        margin-right: $m-size;
+
+        @media only screen and (max-width: $mobile-breakpoint){
+            margin: 0 0 $s-size 0;
+        }
+
+
+        &:not(:last-child){
+            margin-right: $m-size;
+        }
+    }
+}
