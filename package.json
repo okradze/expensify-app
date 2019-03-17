@@ -5,13 +5,14 @@
   "license": "MIT",
   "scripts": {
     "serve": "live-server dist/",
-    "start": "webpack-dev-server --config webpack.dev.js --port 5500",
+    "start": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --config webpack.prod.js",
-    "test": "cross-env NODE_ENV=test jest components/LoginPage --config=jest.config.json"
+    "test": "cross-env NODE_ENV=test jest reducers/auth --config=jest.config.json"
   },
   "dependencies": {
     "express": "^4.16.4",
     "firebase": "^5.8.6",
+    "history": "^4.9.0",
     "moment": "^2.24.0",
     "normalize.css": "^8.0.1",
     "numeral": "^2.0.6",
