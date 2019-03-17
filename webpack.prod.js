@@ -56,7 +56,7 @@ module.exports = merge(common, {
             filename: '[name].[chunkhash].css'
         }),
         new CopyPlugin([
-            { from: 'src/_redirects', to: 'dist' }
+            { from: 'src/_redirects', to: '' }
         ]),
         new CleanWebpackPlugin()
     ]
