@@ -7,9 +7,15 @@
     "serve": "live-server dist/",
     "start": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --config webpack.prod.js",
-    "test": "cross-env NODE_ENV=test jest actions/expenses --config=jest.config.json"
+    "test": "cross-env NODE_ENV=test jest components/LoadingPage --config=jest.config.json"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
+    }
   },
   "dependencies": {
+    "babel-polyfill": "^6.26.0",
     "express": "^4.16.4",
     "firebase": "^5.8.6",
     "history": "^4.9.0",
@@ -32,6 +38,7 @@
     "@babel/preset-env": "^7.3.4",
     "@babel/preset-react": "^7.0.0",
     "babel-cli": "^6.26.0",
+    "babel-jest": "^24.5.0",
     "babel-loader": "^8.0.5",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "clean-webpack-plugin": "^2.0.0",

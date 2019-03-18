@@ -4,6 +4,16 @@
 
 html {
     font-size: 62.5%;
+
+    @media only screen and (max-width: $mobile-breakpoint) {
+        font-size: 56.25%;
+    }
+    @media only screen and (max-width: $sm-breakpoint) {
+        font-size: 50%;
+    }
+    @media only screen and (max-width: 21.875em) {
+        font-size: 45%;
+    }
 }
 
 body {

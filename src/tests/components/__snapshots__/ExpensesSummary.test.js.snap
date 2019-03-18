@@ -1,27 +1,73 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`should render component correctly with 1 expense 1`] = `
-<div>
-  <p>
-    Viewing 
-    1
-     
-    expense
-     totaling 
-    $10.00
-  </p>
+<div
+  className="page-header"
+>
+  <div
+    className="content-container"
+  >
+    <h1
+      className="page-header__title"
+    >
+      Viewing 
+      <span>
+        1
+      </span>
+       
+      expense
+       totaling 
+      <span>
+        $10.00
+      </span>
+    </h1>
+    <div
+      className="page-header__actions"
+    >
+      <Link
+        className="button button--blue"
+        replace={false}
+        to="/create"
+      >
+        Add Expense
+      </Link>
+    </div>
+  </div>
 </div>
 `;
 
 exports[`should render component correctly with multiple expense 1`] = `
-<div>
-  <p>
-    Viewing 
-    3
-     
-    expenses
-     totaling 
-    $100.00
-  </p>
+<div
+  className="page-header"
+>
+  <div
+    className="content-container"
+  >
+    <h1
+      className="page-header__title"
+    >
+      Viewing 
+      <span>
+        3
+      </span>
+       
+      expenses
+       totaling 
+      <span>
+        $100.00
+      </span>
+    </h1>
+    <div
+      className="page-header__actions"
+    >
+      <Link
+        className="button button--blue"
+        replace={false}
+        to="/create"
+      >
+        Add Expense
+      </Link>
+    </div>
+  </div>
 </div>
 `;

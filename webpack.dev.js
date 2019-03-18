@@ -4,6 +4,7 @@ const merge = require('webpack-merge');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = merge(common, {
+    entry: './src/app.js',
     mode: 'development',
     output: {
         filename: '[name].bundle.js',

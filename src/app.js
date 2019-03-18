@@ -9,6 +9,8 @@ import './styles/main.scss';
 import { firebase } from './firebase/firebase';
 import { startSetExpenses } from './actions/expenses';
 import { login, logout } from './actions/auth';
+import LoadingPage from './components/LoadingPage';
+import './locales/ge';
 
 const store = configureStore();
 const jsx = (
@@ -24,10 +26,11 @@ const renderApp = () => {
         hasRendered = true;
     }
 };
+ReactDOM.render(<LoadingPage />, document.getElementById('app'));
 
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {
-        store.dispatch(login(user.uid));
+        store.dispatch(login(user.uid));    
         store.dispatch(startSetExpenses()).then(() => {
             renderApp();
             if (history.location.pathname === '/') {

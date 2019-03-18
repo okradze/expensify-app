@@ -9,9 +9,6 @@ if(process.env.NODE_ENV === 'test'){
 }
 
 module.exports = {
-    entry: {
-        main: './src/app.js'
-    },
     module: {
         rules: [
             {
@@ -21,7 +18,7 @@ module.exports = {
                 ]
             },
             {
-                test: /\.(svg|jpg|png|gif|jpeg)$/,
+                test: /\.(svg|jpg|png|gif|jpeg)$/i,
                 use: {
                     loader: 'file-loader',
                     options: {

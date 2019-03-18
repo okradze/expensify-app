@@ -9,6 +9,7 @@ const common = require('./webpack.common');
 const merge = require('webpack-merge');
 
 module.exports = merge(common, {
+    entry: ['babel-polyfill', './src/app.js'],
     mode: 'production',
     output: {
         path: path.join(__dirname, './dist'),
