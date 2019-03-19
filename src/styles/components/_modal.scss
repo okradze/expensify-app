@@ -1,0 +1,24 @@
+.ReactModalPortal .ReactModal__Overlay {
+    transition: opacity .2s ease-in-out;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal {
+    background-color: fade-out(#f6f6f6, 0.2);
+    outline: none;
+    padding: $l-size;
+    text-align: center;
+    border-radius: 1px;
+
+    h2 {
+        margin: 0 0 $l-size 0;
+    }
+    &__button {
+        margin-right: $m-size;
+        @media only screen and (max-width: $mobile-breakpoint) {
+            margin-bottom: $s-size;
+        }
+    }
+}
