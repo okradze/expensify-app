@@ -11,7 +11,6 @@ import { startSetExpenses } from './actions/expenses';
 import { login, logout } from './actions/auth';
 import LoadingPage from './components/LoadingPage';
 import './locales/ge';
-import LogoutModal from './components/LogoutModal';
 
 const store = configureStore();
 const jsx = (
