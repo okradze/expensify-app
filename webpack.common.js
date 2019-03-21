@@ -18,15 +18,6 @@ module.exports = {
                 ]
             },
             {
-                test: /\.(svg|jpg|png|gif|jpeg)$/i,
-                use: {
-                    loader: 'file-loader',
-                    options: {
-                        name: '[name].[hash].[ext]'
-                    }
-                }
-            },
-            {
                 test: /\.js$/,
                 exclude: '/node_modules/',
                 use: {

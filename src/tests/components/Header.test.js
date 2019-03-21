@@ -7,9 +7,8 @@ test('should render Header correctly', () => {
     expect(wrapper).toMatchSnapshot();
 });
 
-test('should call startLogout on button click', () => {
-    const onClickSpy = jest.fn();
-    const wrapper = shallow(<Header startLogout={onClickSpy} />);
+test('should call changeModalState on button click', () => {
+    const wrapper = shallow(<Header />);
     wrapper.find('button').simulate('click');
-    expect(onClickSpy).toHaveBeenCalled();
+    expect(wrapper.state('isModalOpen')).toBe(true);
 });

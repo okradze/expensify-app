@@ -18,7 +18,11 @@ exports[`should render LoginPage correctly 1`] = `
     <button
       className="button button--blue"
     >
-      Log in with Google
+      <img
+        className="box-layout__google"
+        src={Object {}}
+      />
+      Log in by Google
     </button>
   </div>
   <p

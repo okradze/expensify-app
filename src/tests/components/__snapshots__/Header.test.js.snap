@@ -29,5 +29,9 @@ exports[`should render Header correctly 1`] = `
       </button>
     </div>
   </div>
+  <Connect(LogoutModal)
+    closeModal={[Function]}
+    isModalOpen={false}
+  />
 </header>
 `;
